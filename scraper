@@ -1,0 +1,43 @@
+import pandas as pd #used to create data frames
+import requests
+from bs4 import BeautifulSoup
+import numpy as np
+
+url = 'https://www.imdb.com/list/ls048276758/'
+response = requests.get(url)
+soup = BeautifulSoup(response.content, 'html.parser')
+
+movie_name = []
+year = []
+time = []
+rating = []
+metascore = []
+votes = []
+gross = []
+
+movie_data = soup.findAll('div', attrs= {'class':'lister-item mode-detail'})
+
+for store in movie_data:
+    name = store.h3.a.text
+    movie_name.append(name)
+    
+    year_of_release = store.h3.find('span', class_ = 'lister-item-year text-muted unbold').text.replace('(','').replace(')','')
+    year.append(year_of_release)
+    
+    movie_duration = store.find('p', class_ = 'text-muted text-small').find('span', class_ = 'runtime').text.replace('min','')
+    time.append(movie_duration)
+    
+    movie_rating = store.find('span', class_ = 'ipl-rating-star__rating').text.replace('\n','')
+    rating.append(movie_rating)
+    
+    meta = store.find('span', class_ = 'metascore').text.replace('  ','') if store.find('span', class_ = 'metascore') else "NA"
+    metascore.append(meta)
+    
+    movie_votes = store.findAll('span', attrs={'name':'nv'})[0].text
+    votes.append(movie_votes)
+    
+    movie_gross = store.findAll('span', attrs={'name':'nv'})[1].text if len(store.findAll('span', attrs={'name':'nv'})) > 1 else "NA"
+    gross.append(movie_gross)
+    
+    movie_data_frame = pd.DataFrame({'Name of movie':movie_name,'year of release':year,'movie time duration':time,'movie rating':rating,'metascore':metascore,
+                                'votes':votes,'movie gross':gross})
